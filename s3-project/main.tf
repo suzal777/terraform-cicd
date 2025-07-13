@@ -29,7 +29,7 @@ resource "aws_s3_bucket_policy" "project_bucket" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           AWS = data.terraform_remote_state.ec2.outputs.instance_arn
         }

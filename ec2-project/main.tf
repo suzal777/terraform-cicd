@@ -21,7 +21,7 @@ resource "aws_security_group" "web_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # allow from anywhere (adjust as needed)
+    cidr_blocks = ["0.0.0.0/0"] # allow from anywhere (adjust as needed)
   }
 
   ingress {
