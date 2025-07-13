@@ -106,12 +106,14 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -input=false -out=tfplan && terraform show -no-color tfplan > plan.txt
 
       - name: Comment Plan Results
         if: github.event_name == 'pull_request'
         uses: GetTerminus/terraform-pr-commenter@v3
         with:
-          job: plan
-          id: plan
-          token: ${{ secrets.GITHUB_TOKEN }}      
+          commenter_type: plan
+          commenter_plan_path: plan.txt
+          commenter_exitcode: ${{ steps.plan.outcome }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
