@@ -117,6 +117,7 @@ jobs:
         uses: GetTerminus/terraform-pr-commenter@v3
         with:
           commenter_type: plan
+          commenter_input: ./terraform_plans/tfplan.txt
           commenter_plan_path: ./terraform_plans/plan.txt
           commenter_exitcode: ${{ steps.plan.outputs.exit_code }}
         env:
