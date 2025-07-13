@@ -110,10 +110,9 @@ jobs:
           mkdir -p ./tf_plans
           terraform plan -no-color -input=false -out=./tf_plans/tfplan.binary
           terraform show -no-color ./tf_plans/tfplan.binary > ./tf_plans/plan.txt
-          echo "PLAN_TEXT=$(cat ./tf_plans/plan.txt)" >> $GITHUB_ENV
-          echo "PLAN_SUMMARY=$(terraform show -no-color -json ./tf_plans/tfplan.binary | \
-            jq -r '.resource_changes[] | "\(.change.actions[])/\(.address)"' | \
-            sort | uniq -c)" >> $GITHUB_ENV
+          PLAN_SUMMARY=$(terraform show -no-color -json ./tf_plans/tfplan.binary | \
+            jq -r '[.resource_changes[]? | "\(.change.actions[])/\(.address)"] | unique | .[]' || echo "No changes.")
+          echo "PLAN_SUMMARY=$PLAN_SUMMARY" >> $GITHUB_ENV
 
       - name: Comment Plan Results
         if: github.event_name == 'pull_request'
@@ -123,7 +122,7 @@ jobs:
           commenter_plan_path: ./tf_plans/plan.txt
           commenter_plan_header: "## Terraform Plan Summary"
           commenter_plan_summary: ${{ env.PLAN_SUMMARY }}
-          commenter_exitcode: ${{ steps.plan.outcome }}
+          commenter_exitcode: ${{ steps.plan.conclusion == 'success' && '0' || '1' }}
           commenter_append_comment: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
