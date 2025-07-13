@@ -106,8 +106,8 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          terraform plan -out=.planfile
-          terraform show -no-color .planfile > plan.txt
+          terraform plan -out=plan.binary
+          terraform show -no-color plan.binary > plan.txt
 
       - name: Post PR comment
         uses: borchero/terraform-plan-comment@v2
