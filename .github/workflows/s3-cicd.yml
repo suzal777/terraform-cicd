@@ -106,12 +106,16 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -lock=false -input=false |& tee tf_plan.txt
-      - uses: GetTerminus/terraform-pr-commenter@v3
+        run: |
+          terraform plan -lock=false -input=false | tee tf_plan.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Comment Plan Results
+        uses: GetTerminus/terraform-pr-commenter@v3
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TF_WORKSPACE: ${{ inputs.terraform_workspace }}
         with:
           commenter_type: plan
           commenter_plan_path: tf_plan.txt
-          commenter_exitcode: ${{ steps.plan.outputs.exit }} 
+          commenter_exitcode: ${{ steps.plan.outputs.exit_code }}
