@@ -171,7 +171,7 @@ jobs:
           files: |
             ec2-terraform-config.zip  
 
-  ec2-deploy:
+  deploy:
     name: Deploy EC2
     needs: release
     runs-on: ubuntu-latest
@@ -184,14 +184,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download EC2 Artifact
-        uses: dawidd6/action-download-artifact@v2
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: ec2-cicd.yml
-          name: ec2-terraform-config.zip
+          name: ec2-terraform-config
+          path: ec2-deploy
 
-      - name: Extract EC2 Zip
+      - name: Verify Artifact
+        run: |
+          if [ ! -f ec2-deploy/ec2-terraform-config.zip ]; then
+            echo "::error::Artifact download failed!"
+            exit 1
+          fi
+
+      - name: Extract Artifact
         run: unzip ec2-deploy/ec2-terraform-config.zip -d ec2-deploy
 
       - name: Setup Terraform
@@ -199,12 +205,10 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Get EC2 Remote State
+      - name: Terraform Init
         working-directory: ./ec2-deploy/ec2-project
-        run: |
-          terraform init
-          terraform plan
+        run: terraform init
 
-      - name: Terraform Apply (EC2)
+      - name: Terraform Apply
         working-directory: ./ec2-deploy/ec2-project
-        run: terraform apply -auto-approve -input=false            
+        run: terraform apply -auto-approve -input=false           

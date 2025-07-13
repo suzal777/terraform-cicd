@@ -171,9 +171,9 @@ jobs:
           files: |
             s3-terraform-config.zip
 
-  s3-deploy:
+  deploy:
     name: Deploy S3
-    needs: release
+    needs: [release, deploy-ec2]
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -184,14 +184,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download S3 Artifact
-        uses: dawidd6/action-download-artifact@v2
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: s3-cicd.yml
-          name: s3-terraform-config.zip
+          name: s3-terraform-config
+          path: s3-deploy
 
-      - name: Extract S3 Zip
+      - name: Verify Artifact
+        run: |
+          if [ ! -f s3-deploy/s3-terraform-config.zip ]; then
+            echo "::error::Artifact download failed!"
+            exit 1
+          fi
+
+      - name: Extract Artifact
         run: unzip s3-deploy/s3-terraform-config.zip -d s3-deploy
 
       - name: Setup Terraform
