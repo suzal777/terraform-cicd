@@ -123,3 +123,44 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_WORKSPACE: ${{ inputs.terraform_workspace }}
+
+  release:
+    name: Create Release
+    needs: plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get S3 Project Version
+        id: version
+        working-directory: ./s3-project
+        run: |
+          latest_tag=$(git describe --tags --match "s3-v*" --abbrev=0 2>/dev/null || echo "s3-v0.0.0")
+          version=${latest_tag#s3-v}
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
+          new_patch=$((patch + 1))
+          new_version="s3-v${major}.${minor}.${new_patch}"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Create Tag
+        uses: mathieudutour/github-tag-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.version.outputs.new_version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: S3 Project ${{ steps.version.outputs.new_version }}
+          body: "S3 Infrastructure Release"
+          files: |
+            s3-project/*.tf
+            s3-project/.terraform.lock.hcl
+        
