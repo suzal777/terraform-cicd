@@ -138,8 +138,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Generate EC2 Zip File
+        working-directory: ./ec2-project
+        run: zip -r ../ec2-terraform-config.zip .    
+
       - name: Get EC2 Project Version
-        id: version
+        id: ec2-version
         working-directory: ./ec2-project
         run: |
           latest_tag=$(git describe --tags --match "ec2-v*" --abbrev=0 2>/dev/null || echo "ec2-v0.0.0")
@@ -155,14 +159,14 @@ jobs:
         uses: mathieudutour/github-tag-action@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.version.outputs.new_version }}
+          tag: ${{ steps.ec2-version.outputs.new_version }}
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload EC2 Release Asset
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          tag_name: ${{ steps.version.outputs.new_version }}
-          name: EC2 Project ${{ steps.version.outputs.new_version }}
-          body: "EC2 Infrastructure Release"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: ${{ steps.ec2-version.outputs.new_version }}
+          prerelease: false
+          title: "EC2 Release ${{ steps.ec2-version.outputs.new_version }}"
           files: |
-            ec2-project/*.tf
-            ec2-project/.terraform.lock.hcl        
+            ec2-terraform-config.zip    
