@@ -76,4 +76,30 @@ jobs:
       - name: Run TFSec
         uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}      
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  plan:
+    name: Plan
+    needs: [lint, security-scan]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ec2-project
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false
+
+      - name: Comment Plan Results
+        if: github.event_name == 'pull_request'
+        uses: GetTerminus/terraform-pr-commenter@v3
+        with:
+          job: plan
+          id: plan
+          token: ${{ secrets.GITHUB_TOKEN }}          
