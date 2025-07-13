@@ -1,0 +1,63 @@
+name: S3 Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ 's3-project/**' ]
+  push:
+    branches: [ main ]
+    paths: [ 's3-project/**' ]
+
+env:
+  TF_VERSION: 1.12.2
+  TFLINT_VERSION: 0.47.0
+  AWS_REGION: us-east-1
+  PROJECT: s3
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./s3-project
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v2
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Run TFLint
+        id: tflint
+        run: tflint --init && tflint
+
+      - name: Comment TFLint Results
+        if: failure() && github.event_name == 'pull_request'
+        uses: GetTerminus/terraform-pr-commenter@v1
+        with:
+          job: tflint
+          id: tflint
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform init -backend=false && terraform validate
