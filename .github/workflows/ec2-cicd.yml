@@ -188,9 +188,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: ${{ github.workflow }}.yml
+          workflow: ec2-cicd.yml
           name: ec2-terraform-config.zip
-          path: ec2-deploy
 
       - name: Extract EC2 Zip
         run: unzip ec2-deploy/ec2-terraform-config.zip -d ec2-deploy
