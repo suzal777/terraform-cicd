@@ -106,25 +106,12 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: |
-          mkdir -p ./tf_plans
-          terraform plan -no-color -input=false -out=./tf_plans/tfplan.binary
-          terraform show -no-color ./tf_plans/tfplan.binary > ./tf_plans/plan.txt
-          PLAN_SUMMARY=$(terraform show -no-color -json ./tf_plans/tfplan.binary | \
-            jq -r '[.resource_changes[]? | "\(.change.actions[])/\(.address)"] | unique | .[]' || echo "No changes.")
-          echo "plan_summary<<EOF" >> $GITHUB_OUTPUT
-          echo "$PLAN_SUMMARY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Comment Plan Results
-        if: github.event_name == 'pull_request'
-        uses: GetTerminus/terraform-pr-commenter@v3
+        run: terraform plan -lock=false -input=false |& tee tf_plan.txt
+      - uses: GetTerminus/terraform-pr-commenter@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TF_WORKSPACE: ${{ inputs.terraform_workspace }}
         with:
           commenter_type: plan
-          commenter_plan_path: ./tf_plans/plan.txt
-          commenter_plan_header: "## Terraform Plan Summary"
-          commenter_plan_summary: ${{ steps.plan.outputs.plan_summary }}
-          commenter_exitcode: ${{ steps.plan.conclusion == 'success' && '0' || '1' }}
-          commenter_append_comment: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          commenter_plan_path: tf_plan.txt
+          commenter_exitcode: ${{ steps.plan.outputs.exit }} 
