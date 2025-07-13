@@ -188,9 +188,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: ${{ github.workflow }}.yml
+          workflow: s3-cicd.yml
           name: s3-terraform-config.zip
-          path: s3-deploy
 
       - name: Extract S3 Zip
         run: unzip s3-deploy/s3-terraform-config.zip -d s3-deploy
