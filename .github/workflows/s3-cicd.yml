@@ -89,17 +89,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}  
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}  
+
       - name: Terraform Init
         run: terraform init
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false
+        run: |
+          mkdir -p ./tf_plans
+          terraform plan -no-color -input=false -out=./tf_plans/tfplan.binary
+          terraform show -no-color ./tf_plans/tfplan.binary > ./tf_plans/plan.txt
+          PLAN_SUMMARY=$(terraform show -no-color -json ./tf_plans/tfplan.binary | \
+            jq -r '[.resource_changes[]? | "\(.change.actions[])/\(.address)"] | unique | .[]' || echo "No changes.")
+          echo "plan_summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$PLAN_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Comment Plan Results
         if: github.event_name == 'pull_request'
         uses: GetTerminus/terraform-pr-commenter@v3
         with:
-          job: plan
-          id: plan
-          token: ${{ secrets.GITHUB_TOKEN }}      
+          commenter_type: plan
+          commenter_plan_path: ./tf_plans/plan.txt
+          commenter_plan_header: "## Terraform Plan Summary"
+          commenter_plan_summary: ${{ steps.plan.outputs.plan_summary }}
+          commenter_exitcode: ${{ steps.plan.conclusion == 'success' && '0' || '1' }}
+          commenter_append_comment: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  

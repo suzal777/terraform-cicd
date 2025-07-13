@@ -31,11 +31,12 @@ resource "aws_s3_bucket_policy" "project_bucket" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = data.terraform_remote_state.ec2.outputs.instance_arn
+          AWS = data.terraform_remote_state.ec2.outputs.instance_role_arn
         }
         Action   = "s3:PutObject"
         Resource = "${aws_s3_bucket.project_bucket.arn}/*"
       }
     ]
   })
+  depends_on = [data.terraform_remote_state.ec2]
 }
