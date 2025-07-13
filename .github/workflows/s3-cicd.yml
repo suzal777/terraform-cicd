@@ -170,4 +170,43 @@ jobs:
           title: "S3 Release ${{ steps.s3-version.outputs.new_version }}"
           files: |
             s3-terraform-config.zip
+
+  s3-deploy:
+    name: Deploy S3
+    needs: release
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.PRODUCTION_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PRODUCTION_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download S3 Artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: ${{ github.workflow }}.yml
+          name: s3-terraform-config.zip
+          path: s3-deploy
+
+      - name: Extract S3 Zip
+        run: unzip s3-deploy/s3-terraform-config.zip -d s3-deploy
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Get EC2 Remote State
+        working-directory: ./s3-deploy/s3-project
+        run: |
+          terraform init
+          terraform plan
+
+      - name: Terraform Apply
+        working-directory: ./s3-deploy/s3-project
+        run: terraform apply -auto-approve -input=false          
         
