@@ -123,3 +123,43 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_WORKSPACE: ${{ inputs.terraform_workspace }}  
+
+  release:
+    name: Create Release
+    needs: plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get EC2 Project Version
+        id: version
+        working-directory: ./ec2-project
+        run: |
+          latest_tag=$(git describe --tags --match "ec2-v*" --abbrev=0 2>/dev/null || echo "ec2-v0.0.0")
+          version=${latest_tag#ec2-v}
+          major=$(echo $version | cut -d. -f1)
+          minor=$(echo $version | cut -d. -f2)
+          patch=$(echo $version | cut -d. -f3)
+          new_patch=$((patch + 1))
+          new_version="ec2-v${major}.${minor}.${new_patch}"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Create Tag
+        uses: mathieudutour/github-tag-action@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.version.outputs.new_version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: EC2 Project ${{ steps.version.outputs.new_version }}
+          body: "EC2 Infrastructure Release"
+          files: |
+            ec2-project/*.tf
+            ec2-project/.terraform.lock.hcl        
