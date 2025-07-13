@@ -106,7 +106,10 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false -out=tfplan && terraform show -no-color tfplan > plan.txt
+        run: |
+          terraform plan -no-color -input=false -out=tfplan
+          terraform show -no-color tfplan > plan.txt
+          echo "PLAN_SUMMARY=$(terraform show -no-color tfplan | grep -E '^  #|^  ~|^  -|^  +')" >> $GITHUB_ENV
 
       - name: Comment Plan Results
         if: github.event_name == 'pull_request'
@@ -114,6 +117,7 @@ jobs:
         with:
           commenter_type: plan
           commenter_plan_path: plan.txt
+          commenter_plan_summary: ${{ env.PLAN_SUMMARY }}
           commenter_exitcode: ${{ steps.plan.outcome }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
