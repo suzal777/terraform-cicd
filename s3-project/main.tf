@@ -41,7 +41,7 @@ resource "aws_s3_bucket_policy" "project_bucket" {
   depends_on = [data.terraform_remote_state.ec2]
 }
 
-resource "aws_s3_bucket" "project_bucket" {
+resource "aws_s3_bucket" "test_bucket" {
   bucket = "sujal-test-tf-bucket"
 
   tags = {
