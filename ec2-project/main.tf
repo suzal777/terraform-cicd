@@ -23,7 +23,7 @@ resource "aws_iam_role" "ec2_s3_write_role" {
 resource "aws_iam_policy" "s3_put_policy" {
   name        = "sujal-ec2-s3-put-policy"
   description = "Allow EC2 to put objects into S3"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
