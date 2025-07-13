@@ -105,16 +105,12 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        id: plan
         run: |
-          terraform plan -lock=false -input=false |& tee tf_plan.txt
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
-      - uses: GetTerminus/terraform-pr-commenter@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TF_WORKSPACE: ${{ inputs.terraform_workspace }}
+          terraform plan -out=.planfile
+          terraform show -no-color .planfile > plan.txt
+
+      - name: Post PR comment
+        uses: borchero/terraform-plan-comment@v2
         with:
-          commenter_type: plan
-          commenter_plan_path: tf_plan.txt
-          commenter_exitcode: ${{ steps.plan.outputs.exit_code }} 
-          commenter_always_comment: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          planfile: plan.txt
