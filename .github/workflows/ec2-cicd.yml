@@ -107,17 +107,23 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          terraform plan -no-color -input=false -out=tfplan
-          terraform show -no-color tfplan > plan.txt
-          echo "PLAN_SUMMARY=$(terraform show -no-color tfplan | grep -E '^  #|^  ~|^  -|^  +')" >> $GITHUB_ENV
+          mkdir -p ./tf_plans
+          terraform plan -no-color -input=false -out=./tf_plans/tfplan.binary
+          terraform show -no-color ./tf_plans/tfplan.binary > ./tf_plans/plan.txt
+          echo "PLAN_TEXT=$(cat ./tf_plans/plan.txt)" >> $GITHUB_ENV
+          echo "PLAN_SUMMARY=$(terraform show -no-color -json ./tf_plans/tfplan.binary | \
+            jq -r '.resource_changes[] | "\(.change.actions[])/\(.address)"' | \
+            sort | uniq -c)" >> $GITHUB_ENV
 
       - name: Comment Plan Results
         if: github.event_name == 'pull_request'
         uses: GetTerminus/terraform-pr-commenter@v3
         with:
           commenter_type: plan
-          commenter_plan_path: plan.txt
+          commenter_plan_path: ./tf_plans/plan.txt
+          commenter_plan_header: "## Terraform Plan Summary"
           commenter_plan_summary: ${{ env.PLAN_SUMMARY }}
           commenter_exitcode: ${{ steps.plan.outcome }}
+          commenter_append_comment: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}         
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
