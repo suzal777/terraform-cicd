@@ -117,3 +117,4 @@ jobs:
           commenter_type: plan
           commenter_plan_path: tf_plan.txt
           commenter_exitcode: ${{ steps.plan.outputs.exit_code }} 
+          commenter_always_comment: true
