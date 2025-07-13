@@ -104,13 +104,11 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: |
-          terraform plan -out=plan.binary
-          terraform show -no-color plan.binary > plan.txt
-
+      - name: Plan
+        run: terraform plan -out .planfile
+     
       - name: Post PR comment
         uses: borchero/terraform-plan-comment@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          planfile: plan.txt
+          planfile: .planfile 
