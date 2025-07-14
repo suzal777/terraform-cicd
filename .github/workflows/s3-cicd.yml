@@ -173,7 +173,7 @@ jobs:
 
   deploy:
     name: Deploy S3
-    needs: [release, deploy-ec2]
+    needs: release
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -185,10 +185,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Download Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: s3-terraform-config
-          path: s3-deploy
+          name: s3-terraform-config.zip
+          path: s3-terraform-config.zip
 
       - name: Verify Artifact
         run: |
