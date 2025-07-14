@@ -172,7 +172,8 @@ jobs:
           release_name: "EC2 Release ${{ steps.semver_ec2.outputs.new_tag }}"
           draft: false
           prerelease: false 
-          token: ${{ secrets.GITHUB_TOKEN }}   
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
