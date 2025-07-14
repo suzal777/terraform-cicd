@@ -164,14 +164,22 @@ jobs:
           dry_run: false
           default_bump: "patch"
 
-      - name: Upload EC2 Release Asset
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.semver_ec2.outputs.new_version }}
-          prerelease: false
-          title: "EC2 Release ${{ steps.semver_ec2.outputs.new_version }}"
-          files: ec2-project/releases/ec2-terraform-config.zip         
+          tag_name: ${{ steps.semver_ec2.outputs.new_tag }}
+          release_name: "EC2 Release ${{ steps.semver_ec2.outputs.new_tag }}"
+          draft: false
+          prerelease: false    
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ec2-terraform-config.zip
+          asset_name: ec2-terraform-config.zip
+          asset_content_type: application/zip        
 
   deploy:
     name: Deploy to AWS
