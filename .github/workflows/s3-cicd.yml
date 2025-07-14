@@ -182,7 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     outputs:
-      s3-version: ${{ steps.get-version.outputs.s3-version }}
+      s3-version: ${{ steps.get-version.outputs.release_tag }}
     permissions:
       contents: read
       pull-requests: write
