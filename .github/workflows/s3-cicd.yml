@@ -202,10 +202,10 @@ jobs:
 
       - name: Download S3 Artifact from Release
         if: steps.download-s3-artifact.outcome == 'failure'
-        uses: dsaltares/fetch-gh-release-asset@1.1
+        uses: dsaltares/fetch-gh-release-asset@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.event.inputs.s3-version || 's3-v0.0.6' }}
+          tag: ${{ github.event.inputs.s3-version || 's3-v0.0.9' }}
           file: s3-terraform-config.zip
           target-path: s3-deploy
 
