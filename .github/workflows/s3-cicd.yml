@@ -181,50 +181,32 @@ jobs:
     name: Deploy S3
     needs: release
     runs-on: ubuntu-latest
-    environment: production
-    outputs:
-      release_tag: ${{ steps.get-version.outputs.release_tag }}
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}  
 
-      - name: Set Release Tag or Fallback
-        id: resolved_tag
-        run: |
-          echo "version=${{ needs.release.outputs.release_tag || 'tag/s3-v0.0.17' }}" >> $GITHUB_OUTPUT    
-
-      - name: Download S3 Artifact from Workflow
-        id: download-s3-artifact
-        uses: dawidd6/action-download-artifact@v11
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          name: s3-terraform-config.zip
-        continue-on-error: true
-
-      - name: Download S3 Artifact from Release
-        if: steps.download-s3-artifact.outcome == 'failure'
+      - name: Download S3 Release Artifact
         uses: dsaltares/fetch-gh-release-asset@master
         with:
+          repo: ${{ github.repository }}
           token: ${{ secrets.GH_PAT }}
+          target: s3-terraform-config.zip
           file: s3-terraform-config.zip  
 
-      - name: Extract S3 Artifact
-        run: |
-          mkdir -p s3-deploy/s3-project
-          unzip s3-terraform-config.zip -d s3-deploy/s3-project
+      - name: Unzip Artifact
+        run: unzip s3-terraform-config.zip -d s3-terraform
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-          terraform_wrapper: false
 
       - name: Get EC2 Remote State
         working-directory: ./s3-deploy/s3-project
