@@ -85,6 +85,9 @@ jobs:
     name: Plan
     needs: [lint, security-scan]
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
     defaults:
       run:
         working-directory: ./ec2-project
@@ -176,34 +179,55 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
+      - name: Download Artifact from Workflow
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v3
         with:
-          name: ec2-terraform-config
-          path: ec2-terraform-config.zip
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: ${{ github.workflow }}.yml
+          name: ec2-terraform-config.zip
+          path: ec2-deploy
+        continue-on-error: true
+
+      - name: Download Artifact from Release
+        if: steps.download-artifact.outcome == 'failure'
+        uses: dsaltares/fetch-gh-release-asset@1.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.release.outputs.release_tag || 'latest' }}
+          file: ec2-terraform-config.zip
+          target-path: ec2-deploy
 
       - name: Verify Artifact
         run: |
           if [ ! -f ec2-deploy/ec2-terraform-config.zip ]; then
             echo "::error::Artifact download failed!"
+            echo "Tried both workflow artifact and release asset"
             exit 1
           fi
+          echo "Artifact downloaded successfully"
 
       - name: Extract Artifact
-        run: unzip ec2-deploy/ec2-terraform-config.zip -d ec2-deploy
+        run: |
+          mkdir -p ec2-deploy/ec2-project
+          unzip ec2-deploy/ec2-terraform-config.zip -d ec2-deploy/ec2-project
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
       - name: Terraform Init
         working-directory: ./ec2-deploy/ec2-project
@@ -211,4 +235,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ./ec2-deploy/ec2-project
-        run: terraform apply -auto-approve -input=false           
+        run: terraform apply -auto-approve -input=false          

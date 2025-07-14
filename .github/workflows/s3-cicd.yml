@@ -85,6 +85,9 @@ jobs:
     name: Plan
     needs: [lint, security-scan]
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
     defaults:
       run:
         working-directory: ./s3-project
@@ -176,34 +179,55 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
+      - name: Download S3 Artifact from Workflow
+        id: download-s3-artifact
+        uses: dawidd6/action-download-artifact@v3
         with:
-          name: s3-terraform-config
-          path: s3-terraform-config.zip
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: s3-cicd.yml
+          name: s3-terraform-config.zip
+          path: s3-deploy
+        continue-on-error: true
 
-      - name: Verify Artifact
+      - name: Download S3 Artifact from Release
+        if: steps.download-s3-artifact.outcome == 'failure'
+        uses: dsaltares/fetch-gh-release-asset@1.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.s3-version || 's3-v0.0.6' }}
+          file: s3-terraform-config.zip
+          target-path: s3-deploy
+
+      - name: Verify S3 Artifact
         run: |
           if [ ! -f s3-deploy/s3-terraform-config.zip ]; then
-            echo "::error::Artifact download failed!"
+            echo "::error::S3 artifact download failed!"
+            echo "Tried both workflow artifact and release asset"
             exit 1
           fi
+          echo "Downloaded S3 version: ${{ github.event.inputs.s3-version || 'latest' }}"
 
-      - name: Extract Artifact
-        run: unzip s3-deploy/s3-terraform-config.zip -d s3-deploy
+      - name: Extract S3 Artifact
+        run: |
+          mkdir -p s3-deploy/s3-project
+          unzip s3-deploy/s3-terraform-config.zip -d s3-deploy/s3-project
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
 
       - name: Get EC2 Remote State
         working-directory: ./s3-deploy/s3-project
