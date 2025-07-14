@@ -192,10 +192,9 @@ jobs:
 
       - name: Download S3 Artifact from Workflow
         id: download-s3-artifact
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v11
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: s3-cicd.yml
           name: s3-terraform-config.zip
         continue-on-error: true
 
