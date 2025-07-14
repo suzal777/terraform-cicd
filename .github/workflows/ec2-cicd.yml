@@ -164,6 +164,9 @@ jobs:
           dry_run: false
           default_bump: "patch"
 
+      - name: Archive EC2 Terraform Configuration
+        run: zip -r ec2-terraform-config.zip ./ec2-project     
+
       - name: Create GitHub Release
         id: create_release_ec2
         uses: actions/create-release@v1
@@ -173,7 +176,7 @@ jobs:
           draft: false
           prerelease: false 
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
