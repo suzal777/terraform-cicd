@@ -154,7 +154,7 @@ jobs:
           mv ec2-terraform-config.zip releases/
 
       - name: Get EC2 Project Version
-        id: ec2-version
+        id: ec2-version-1
         working-directory: ./ec2-project
         run: |
           latest_tag=$(git describe --tags --match "ec2-v*" --abbrev=0 2>/dev/null || echo "ec2-v0.0.0")
@@ -171,15 +171,15 @@ jobs:
         uses: mathieudutour/github-tag-action@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.ec2-version.outputs.new_version }}
+          tag: ${{ steps.ec2-version-1.outputs.new_version }}
 
       - name: Upload EC2 Release Asset
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.ec2-version.outputs.new_version }}
+          automatic_release_tag: ${{ steps.ec2-version-1.outputs.new_version }}
           prerelease: false
-          title: "EC2 Release ${{ steps.ec2-version.outputs.new_version }}"
+          title: "EC2 Release ${{ steps.ec2-version-1.outputs.new_version }}"
           files: ec2-project/releases/ec2-terraform-config.zip         
 
   deploy:

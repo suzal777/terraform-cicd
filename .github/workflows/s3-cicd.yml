@@ -148,7 +148,7 @@ jobs:
         run: zip -r ../s3-terraform-config.zip .    
 
       - name: Get S3 Project Version
-        id: s3-version
+        id: s3-version-1
         working-directory: ./s3-project
         run: |
           latest_tag=$(git describe --tags --match "s3-v*" --abbrev=0 2>/dev/null || echo "s3-v0.0.0")
@@ -165,15 +165,15 @@ jobs:
         uses: mathieudutour/github-tag-action@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.s3-version.outputs.new_version }}
+          tag: ${{ steps.s3-version-1.outputs.new_version }}
 
       - name: Upload S3 Release Asset
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.s3-version.outputs.new_version }}
+          automatic_release_tag: ${{ steps.s3-version-1.outputs.new_version }}
           prerelease: false
-          title: "S3 Release ${{ steps.s3-version.outputs.new_version }}"
+          title: "S3 Release ${{ steps.s3-version-1.outputs.new_version }}"
           files: |
             s3-terraform-config.zip
 
