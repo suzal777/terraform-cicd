@@ -139,7 +139,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      release_tag: ${{ steps.ec2-version.outputs.new_version }} 
+      release_tag: ${{ steps.semver_ec2.outputs.new_version }} 
     steps:
       - name: Checkout
         uses: actions/checkout@v3

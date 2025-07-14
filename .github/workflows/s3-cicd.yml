@@ -136,7 +136,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      release_tag: ${{ steps.s3-version.outputs.new_version }} 
+      release_tag: ${{ steps.semver_s3.outputs.new_version }} 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -144,8 +144,11 @@ jobs:
           fetch-depth: 0
 
       - name: Generate S3 Zip File
-        working-directory: ./s3-project
-        run: zip -r ../s3-terraform-config.zip .    
+        working-directory: s3-project
+        run: |
+          zip -r s3-terraform-config.zip . -x "*.git*"
+          mkdir -p releases
+          mv s3-terraform-config.zip releases/    
 
       - name: Get Semantic Version
         id: semver_s3
