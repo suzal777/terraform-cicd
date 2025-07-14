@@ -127,7 +127,7 @@ jobs:
           commenter_plan_path: ./terraform_plans/plan.txt
           commenter_exitcode: ${{ steps.plan.outputs.exit_code }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           TF_WORKSPACE: ${{ inputs.terraform_workspace }}
 
   release:
