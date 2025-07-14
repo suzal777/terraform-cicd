@@ -136,7 +136,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      release_tag: ${{ steps.ec2-version.outputs.new_version }} 
+      release_tag: ${{ steps.s3-version.outputs.new_version }} 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -181,6 +181,8 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment: production
+    outputs:
+      s3-version: ${{ steps.get-version.outputs.s3-version }}
     permissions:
       contents: read
       pull-requests: write
@@ -205,7 +207,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: ${{ github.event.inputs.s3-version || 's3-v0.0.9' }}
+          version: ${{ github.event.outputs.s3-version || 's3-v0.0.9' }}
           file: s3-terraform-config.zip  
 
       - name: Extract S3 Artifact
