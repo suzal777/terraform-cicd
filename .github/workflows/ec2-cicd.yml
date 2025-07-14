@@ -184,7 +184,7 @@ jobs:
     outputs:
       ec2-version: ${{ steps.get-version.outputs.ec2-version }}
     permissions:
-      contents: [read, write]
+      contents: read
       pull-requests: write
     steps:
       - name: Configure AWS Credentials

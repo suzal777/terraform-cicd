@@ -184,7 +184,7 @@ jobs:
     outputs:
       s3-version: ${{ steps.get-version.outputs.s3-version }}
     permissions:
-      contents: [read, write]
+      contents: read
       pull-requests: write
     steps:
       - name: Configure AWS Credentials
