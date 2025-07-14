@@ -226,6 +226,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
-        run: |
-          cd ec2-terraform
-          terraform apply -auto-approve -input=false         
+        run: terraform apply -auto-approve -input=false         
