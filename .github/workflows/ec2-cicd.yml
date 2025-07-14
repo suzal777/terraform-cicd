@@ -184,7 +184,9 @@ jobs:
           upload_url: ${{ steps.create_release_ec2.outputs.upload_url }}
           asset_path: ./ec2-terraform-config.zip
           asset_name: ec2-terraform-config.zip
-          asset_content_type: application/zip        
+          asset_content_type: application/zip  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}        
 
   deploy:
     name: Deploy to AWS
