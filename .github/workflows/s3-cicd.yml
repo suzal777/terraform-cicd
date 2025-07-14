@@ -162,26 +162,23 @@ jobs:
           dry_run: false
           default_bump: "patch"
 
-      - name: Create Release
-        id: create_release
+      - name: Create GitHub Release
+        id: create_release_s3
         uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.semver_s3.outputs.new_version }}
-          release_name: "S3 Release ${{ steps.semver_s3.outputs.new_version }}"
+          tag_name: ${{ steps.semver_s3.outputs.new_tag }}
+          release_name: "S3 Release ${{ steps.semver_s3.outputs.new_tag }}"
           draft: false
-          prerelease: false
+          prerelease: false    
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./s3-project/releases/s3-terraform-config.zip
+          upload_url: ${{ steps.create_release_s3.outputs.upload_url }}
+          asset_path: ./s3-terraform-config.zip
           asset_name: s3-terraform-config.zip
-          asset_content_type: application/zip
+          asset_content_type: application/zip 
 
   deploy:
     name: Deploy S3
