@@ -113,22 +113,18 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          mkdir -p ./terraform_plans
-          terraform plan -lock=false -input=false -no-color -out=./terraform_plans/tfplan.binary
-          terraform show -no-color ./terraform_plans/tfplan.binary > ./terraform_plans/plan.txt
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          set -o pipefail
+          terraform plan -lock=false -input=false |& tee tfplan.txt
+          echo "exit=$?" >> $GITHUB_OUTPUT
 
-      - name: Comment Plan Results
-        if: github.event_name == 'pull_request'
+      - name: Comment Plan Output
         uses: GetTerminus/terraform-pr-commenter@v3
-        with:
-          commenter_type: plan
-          commenter_input: ./terraform_plans/tfplan.txt
-          commenter_plan_path: ./terraform_plans/plan.txt
-          commenter_exitcode: ${{ steps.plan.outputs.exit_code }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TF_WORKSPACE: ${{ inputs.terraform_workspace }}  
+        with:
+          commenter_type: plan
+          commenter_plan_path: tfplan.txt
+          commenter_exitcode: ${{ steps.plan.outputs.exit }} 
 
   release:
     name: Create Release
