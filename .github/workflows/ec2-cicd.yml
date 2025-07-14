@@ -172,7 +172,10 @@ jobs:
           prerelease: false
           title: "EC2 Release ${{ steps.ec2-version.outputs.new_version }}"
           files: |
-            ec2-terraform-config.zip  
+            ec2-terraform-config.zip 
+
+    outputs:
+    release_tag: ${{ steps.ec2-version.outputs.new_version }}         
 
   deploy:
     name: Deploy EC2
@@ -205,6 +208,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.release.outputs.release_tag || 'ec2-v0.0.11' }}
           file: ec2-terraform-config.zip
+
+      - name: Move downloaded artifact
+        run: mv ec2-terraform-config.zip ec2-deploy/    
 
       - name: Extract Artifact
         run: |
