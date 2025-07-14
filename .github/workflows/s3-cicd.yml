@@ -88,10 +88,13 @@ jobs:
       pull-requests: write
       contents: read
 
+    defaults:
+      run:
+        working-directory: ./ec2-project  
+
     steps: 
       - name: Checkout code
         uses: actions/checkout@v4
-      
 
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
