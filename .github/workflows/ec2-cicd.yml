@@ -86,7 +86,7 @@ jobs:
     needs: [lint, security-scan]
     runs-on: ubuntu-latest
     permissions:
-      pull_requests: write
+      pull-requests: write
       contents: read
     defaults:
       run:
