@@ -180,7 +180,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release_s3.outputs.upload_url }}
-          asset_path: ./s3-terraform-config.zip
+          asset_path: ./s3-project/releases/s3-terraform-config.zip
           asset_name: s3-terraform-config.zip
           asset_content_type: application/zip 
         env:
