@@ -162,10 +162,7 @@ jobs:
           tag_prefix: "ec2-v"
           create_annotated_tag: true
           dry_run: false
-          default_bump: "patch"
-
-      - name: Archive EC2 Terraform Configuration
-        run: zip -r ec2-terraform-config.zip ./ec2-project     
+          default_bump: "patch"     
 
       - name: Create GitHub Release
         id: create_release_ec2
@@ -182,7 +179,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release_ec2.outputs.upload_url }}
-          asset_path: ./ec2-terraform-config.zip
+          asset_path: release/ec2-terraform-config.zip
           asset_name: ec2-terraform-config.zip
           asset_content_type: application/zip  
         env:
@@ -207,6 +204,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           repo: ${{ github.repository }}
+          version: ${{ needs.release.outputs.new_tag }}
           file: ec2-terraform-config.zip
           target: ec2-terraform-config.zip
           token: ${{ secrets.GH_PAT }}
