@@ -165,9 +165,6 @@ jobs:
           dry_run: false
           default_bump: "patch"
 
-      - name: Archive S3 Terraform Configuration
-        run: zip -r s3-terraform-config.zip ./s3-project  
-
       - name: Create GitHub Release
         id: create_release_s3
         uses: actions/create-release@v1
@@ -208,6 +205,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           repo: ${{ github.repository }}
+          version: ${{ needs.release.outputs.new_tag }}
           file: s3-terraform-config.zip
           target: s3-terraform-config.zip
           token: ${{ secrets.GH_PAT }}
