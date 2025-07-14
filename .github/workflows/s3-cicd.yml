@@ -136,7 +136,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
-      release_tag: ${{ steps.semver_s3.outputs.new_version }} 
+      release_tag: ${{ steps.semver_s3.outputs.new_version }}
+      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -161,15 +162,26 @@ jobs:
           dry_run: false
           default_bump: "patch"
 
-      - name: Upload S3 Release Asset
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.semver_s3.outputs.new_version }}
+          tag_name: ${{ steps.semver_s3.outputs.new_version }}
+          release_name: "S3 Release ${{ steps.semver_s3.outputs.new_version }}"
+          draft: false
           prerelease: false
-          title: "S3 Release ${{ steps.semver_s3.outputs.new_version }}"
-          files: |
-            s3-terraform-config.zip
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./s3-project/releases/s3-terraform-config.zip
+          asset_name: s3-terraform-config.zip
+          asset_content_type: application/zip
 
   deploy:
     name: Deploy S3
@@ -187,12 +199,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}  
 
       - name: Download S3 Release Artifact
-        uses: dsaltares/fetch-gh-release-asset@master
+        uses: actions/download-artifact@v3
         with:
-          repo: ${{ github.repository }}
-          token: ${{ secrets.GH_PAT }}
-          target: s3-terraform-config.zip
-          file: s3-terraform-config.zip  
+          name: s3-terraform-config.zip
+          path: .
 
       - name: Unzip Artifact
         run: unzip s3-terraform-config.zip -d s3-terraform
@@ -210,5 +220,5 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ./s3-deploy/s3-project
-        run: terraform apply -auto-approve -input=false          
+        run: terraform apply -auto-approve -input=false         
         
