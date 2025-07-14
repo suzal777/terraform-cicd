@@ -153,33 +153,24 @@ jobs:
           mkdir -p releases
           mv ec2-terraform-config.zip releases/
 
-      - name: Get EC2 Project Version
-        id: ec2-version-1
-        working-directory: ./ec2-project
-        run: |
-          latest_tag=$(git describe --tags --match "EC2-v*" --abbrev=0 2>/dev/null || echo "EC2-v0.0.0")
-          version=${latest_tag#EC2-v}
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          new_patch=$((patch + 1))
-          new_version="EC2-v${major}.${minor}.${new_patch}"
-          echo "new_version=$new_version"
-          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
-
-      - name: Create Tag
-        uses: mathieudutour/github-tag-action@v2
+      - name: Get Semantic Version
+        id: semver_ec2
+        uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.ec2-version-1.outputs.new_version }}
+          release_branches: "main"
+          tag_prefix: "ec2-v"
+          create_annotated_tag: true
+          dry_run: false
+          default_bump: "patch"
 
       - name: Upload EC2 Release Asset
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.ec2-version-1.outputs.new_version }}
+          automatic_release_tag: ${{ steps.semver_ec2.outputs.new_version }}
           prerelease: false
-          title: "EC2 Release ${{ steps.ec2-version-1.outputs.new_version }}"
+          title: "EC2 Release ${{ steps.semver_ec2.outputs.new_version }}"
           files: ec2-project/releases/ec2-terraform-config.zip         
 
   deploy:

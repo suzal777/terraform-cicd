@@ -147,33 +147,24 @@ jobs:
         working-directory: ./s3-project
         run: zip -r ../s3-terraform-config.zip .    
 
-      - name: Get S3 Project Version
-        id: s3-version-1
-        working-directory: ./s3-project
-        run: |
-          latest_tag=$(git describe --tags --match "S3-v*" --abbrev=0 2>/dev/null || echo "S3-v0.0.0")
-          version=${latest_tag#S3-v}
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          new_patch=$((patch + 1))
-          new_version="S3-v${major}.${minor}.${new_patch}"
-          echo "new_version=$new_version"
-          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
-
-      - name: Create Tag
-        uses: mathieudutour/github-tag-action@v2
+      - name: Get Semantic Version
+        id: semver_s3
+        uses: mathieudutour/github-tag-action@v6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.s3-version-1.outputs.new_version }}
+          release_branches: "main"
+          tag_prefix: "s3-v"
+          create_annotated_tag: true
+          dry_run: false
+          default_bump: "patch"
 
       - name: Upload S3 Release Asset
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.s3-version-1.outputs.new_version }}
+          automatic_release_tag: ${{ steps.semver_s3.outputs.new_version }}
           prerelease: false
-          title: "S3 Release ${{ steps.s3-version-1.outputs.new_version }}"
+          title: "S3 Release ${{ steps.semver_s3.outputs.new_version }}"
           files: |
             s3-terraform-config.zip
 
