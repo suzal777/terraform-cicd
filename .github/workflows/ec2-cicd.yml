@@ -155,15 +155,9 @@ jobs:
 
       - name: Get EC2 Project Version
         id: ec2-version-1
-        working-directory: ./ec2-project
         run: |
-          latest_tag=$(git describe --tags --match "EC2-v*" --abbrev=0 2>/dev/null || echo "EC2-v0.0.0")
-          version=${latest_tag#EC2-v}
-          major=$(echo $version | cut -d. -f1)
-          minor=$(echo $version | cut -d. -f2)
-          patch=$(echo $version | cut -d. -f3)
-          new_patch=$((patch + 1))
-          new_version="EC2-v${major}.${minor}.${new_patch}"
+          timestamp=$(date +'%Y%m%d%H%M%S')
+          new_version="EC2-v${timestamp}"
           echo "new_version=$new_version"
           echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
 
