@@ -135,6 +135,8 @@ jobs:
     needs: plan
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.ec2-version.outputs.new_version }} 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -173,9 +175,6 @@ jobs:
           title: "S3 Release ${{ steps.s3-version.outputs.new_version }}"
           files: |
             s3-terraform-config.zip
-
-    outputs:
-    release_tag: ${{ steps.ec2-version.outputs.new_version }}        
 
   deploy:
     name: Deploy S3
