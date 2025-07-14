@@ -165,18 +165,19 @@ jobs:
           default_bump: "patch"
 
       - name: Create GitHub Release
-        id: create_release
+        id: create_release_ec2
         uses: actions/create-release@v1
         with:
           tag_name: ${{ steps.semver_ec2.outputs.new_tag }}
           release_name: "EC2 Release ${{ steps.semver_ec2.outputs.new_tag }}"
           draft: false
-          prerelease: false    
+          prerelease: false 
+          token: ${{ secrets.GITHUB_TOKEN }}   
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.create_release_ec2.outputs.upload_url }}
           asset_path: ./ec2-terraform-config.zip
           asset_name: ec2-terraform-config.zip
           asset_content_type: application/zip        
