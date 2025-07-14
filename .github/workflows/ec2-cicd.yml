@@ -181,8 +181,10 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment: production
+    outputs:
+      ec2-version: ${{ steps.get-version.outputs.ec2-version }}
     permissions:
-      contents: read
+      contents: [read, write]
       pull-requests: write
     steps:
       - name: Configure AWS Credentials
