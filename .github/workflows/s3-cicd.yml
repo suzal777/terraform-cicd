@@ -198,13 +198,13 @@ jobs:
       - name: Set Release Tag or Fallback
         id: resolved_tag
         run: |
-          echo "version=${{ needs.release.outputs.release_tag || 'ec2-v0.0.11' }}" >> $GITHUB_OUTPUT    
+          echo "version=${{ needs.release.outputs.release_tag || 'tag/s3-v0.0.17' }}" >> $GITHUB_OUTPUT    
 
       - name: Download S3 Artifact from Workflow
         id: download-s3-artifact
         uses: dawidd6/action-download-artifact@v11
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAT }}
           name: s3-terraform-config.zip
         continue-on-error: true
 
@@ -212,7 +212,7 @@ jobs:
         if: steps.download-s3-artifact.outcome == 'failure'
         uses: dsaltares/fetch-gh-release-asset@master
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           version: ${{ steps.resolved_tag.outputs.version }}
           file: s3-terraform-config.zip  
 
