@@ -144,8 +144,11 @@ jobs:
           fetch-depth: 0
 
       - name: Generate EC2 Zip File
-        working-directory: ./ec2-project
-        run: zip -r ./ec2-terraform-config.zip .    
+        working-directory: ec2-project
+        run: |
+          zip -r ec2-terraform-config.zip . -x "*.git*"
+          mkdir -p releases
+          mv ec2-terraform-config.zip releases/
 
       - name: Get EC2 Project Version
         id: ec2-version
@@ -174,7 +177,7 @@ jobs:
           automatic_release_tag: ${{ steps.ec2-version.outputs.new_version }}
           prerelease: false
           title: "EC2 Release ${{ steps.ec2-version.outputs.new_version }}"
-          files: ec2-project/ec2-terraform-config.zip         
+          files: ec2-project/releases/ec2-terraform-config.zip         
 
   deploy:
     name: Deploy to AWS
