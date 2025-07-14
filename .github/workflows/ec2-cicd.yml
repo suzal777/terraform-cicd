@@ -178,85 +178,37 @@ jobs:
             ec2-terraform-config.zip         
 
   deploy:
-    name: Deploy EC2
-    needs: release
-    runs-on: ubuntu-latest
-    environment: production
-    outputs:
-      release_tag: ${{ steps.get-version.outputs.release_tag }}
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+  name: Deploy to AWS
+  needs: release
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      # - name: Set Release Tag or Fallback
-      #   id: resolved_tag
-      #   run: |
-      #     echo "version=${{ needs.release.outputs.release_tag || 'tag/ec2-v0.0.19' }}" >> $GITHUB_OUTPUT    
+    - name: Download EC2 Release Artifact
+      uses: dsaltares/fetch-gh-release-asset@master
+      with:
+        repo: ${{ github.repository }}
+        version: ${{ needs.release.outputs.release_tag }}
+        file: ec2-terraform-config.zip
+        token: ${{ secrets.GH_PAT }}
 
-      # - name: Download Artifact from Workflow
-      #   id: download-artifact
-      #   uses: dawidd6/action-download-artifact@v11
-      #   with:
-      #     github_token: ${{ secrets.GH_PAT }}
-      #     name: ec2-terraform-config.zip
-      #   continue-on-error: true
+    - name: Unzip Artifact
+      run: unzip ec2-terraform-config.zip -d ec2-terraform
 
-      # - name: Download Artifact from Release
-      #   if: steps.download-artifact.outcome == 'failure'
-      #   uses: dsaltares/fetch-gh-release-asset@master
-      #   with:
-      #     token: ${{ secrets.GH_PAT }}
-      #     version: ${{ steps.resolved_tag.outputs.version }}
-      #     file: ec2-terraform-config.zip
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
 
-      # - name: Extract Artifact
-      #   run: |
-      #     mkdir -p ec2-deploy/ec2-project
-      #     unzip ec2-terraform-config.zip -d ec2-deploy/ec2-project
+    - name: Terraform Init
+      working-directory: ./ec2-terraform
+      run: terraform init
 
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3
-      #   with:
-      #     terraform_version: ${{ env.TF_VERSION }}
-      #     terraform_wrapper: false
-
-      - name: Download artifact
-        uses: dawidd6/action-download-artifact@v11
-        with:
-          github_token: ${{secrets.GH_PAT}}
-          workflow: ec2-cicd.yml
-      - uses: actions/checkout@v4
-      - name: Get latest tag
-        id: get-version
-        run: |
-          git fetch --tags
-          release_tag=$(git tag --sort=version:refname | grep -v '^v' | tail -n 1)
-          echo "release_tag=$release_tag" >> $GITHUB_OUTPUT
-      - name: Create Release
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: ${{ github.repository }}
-          version: 'tags/${{ steps.get-version.outputs.release_tag }}'
-          file: ec2-terraform-config.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract zipped artifact
-        run: |
-          sudo apt install -y unzip
-          unzip terraform-artifact.zip -d terraform-artifact
-      - uses: hashicorp/setup-terraform@v3
-    
-
-      - name: Terraform Init
-        working-directory: ./ec2-deploy/ec2-project
-        run: terraform init
-
-      - name: Terraform Apply
-        working-directory: ./ec2-deploy/ec2-project
-        run: terraform apply -auto-approve -input=false          
+    - name: Terraform Apply
+      working-directory: ./ec2-terraform
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ env.AWS_REGION }}
+      run: terraform apply -auto-approve          
