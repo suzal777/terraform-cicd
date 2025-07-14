@@ -182,7 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     outputs:
-      ec2-version: ${{ steps.get-version.outputs.release_tag }}
+      release_tag: ${{ steps.get-version.outputs.release_tag }}
     permissions:
       contents: read
       pull-requests: write
@@ -193,6 +193,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set Release Tag or Fallback
+        id: resolved_tag
+        run: |
+          echo "version=${{ needs.release.outputs.release_tag || 'ec2-v0.0.11' }}" >> $GITHUB_OUTPUT    
 
       - name: Download Artifact from Workflow
         id: download-artifact
@@ -207,7 +212,7 @@ jobs:
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: ${{ needs.release.outputs.release_tag || 'ec2-v0.0.11' }}
+          version: ${{ steps.resolved_tag.outputs.version }}
           file: ec2-terraform-config.zip
 
       - name: Extract Artifact
