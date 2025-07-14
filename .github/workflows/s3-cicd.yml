@@ -151,13 +151,13 @@ jobs:
         id: s3-version-1
         working-directory: ./s3-project
         run: |
-          latest_tag=$(git describe --tags --match "s3-v*" --abbrev=0 2>/dev/null || echo "s3-v0.0.0")
-          version=${latest_tag#s3-v}
+          latest_tag=$(git describe --tags --match "S3-v*" --abbrev=0 2>/dev/null || echo "S3-v0.0.0")
+          version=${latest_tag#S3-v}
           major=$(echo $version | cut -d. -f1)
           minor=$(echo $version | cut -d. -f2)
           patch=$(echo $version | cut -d. -f3)
           new_patch=$((patch + 1))
-          new_version="s3-v${major}.${minor}.${new_patch}"
+          new_version="S3-v${major}.${minor}.${new_patch}"
           echo "new_version=$new_version"
           echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
 
