@@ -187,17 +187,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-     - name: Download S3 Artifact from Workflow
+      - name: Download S3 Artifact from Workflow
         id: download-s3-artifact
         uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: s3-cicd.yml  # Your S3 workflow filename
+          workflow: s3-cicd.yml
           name: s3-terraform-config.zip
           path: s3-deploy
         continue-on-error: true
 
-      # Fallback to release download if workflow artifact fails
       - name: Download S3 Artifact from Release
         if: steps.download-s3-artifact.outcome == 'failure'
         uses: dsaltares/fetch-gh-release-asset@1.1
