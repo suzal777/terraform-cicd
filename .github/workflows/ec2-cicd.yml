@@ -158,7 +158,8 @@ jobs:
           patch=$(echo $version | cut -d. -f3)
           new_patch=$((patch + 1))
           new_version="ec2-v${major}.${minor}.${new_patch}"
-          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "new_version=$new_version"
+          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
 
       - name: Create Tag
         uses: mathieudutour/github-tag-action@v2
