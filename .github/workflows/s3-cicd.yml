@@ -155,12 +155,15 @@ jobs:
         id: semver_s3
         uses: mathieudutour/github-tag-action@v6.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAT }}
           release_branches: "main"
           tag_prefix: "s3-v"
           create_annotated_tag: true
           dry_run: false
           default_bump: "patch"
+
+      - name: Archive S3 Terraform Configuration
+        run: zip -r s3-terraform-config.zip ./s3-project  
 
       - name: Create GitHub Release
         id: create_release_s3
@@ -171,7 +174,7 @@ jobs:
           draft: false
           prerelease: false    
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -180,6 +183,8 @@ jobs:
           asset_path: ./s3-terraform-config.zip
           asset_name: s3-terraform-config.zip
           asset_content_type: application/zip 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}    
 
   deploy:
     name: Deploy S3
