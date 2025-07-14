@@ -187,7 +187,7 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ec2-terraform-config.zip
+          name: ec2-terraform-config
           path: ec2-terraform-config.zip
 
       - name: Verify Artifact
