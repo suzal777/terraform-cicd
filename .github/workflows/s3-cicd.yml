@@ -204,8 +204,8 @@ jobs:
         if: steps.download-s3-artifact.outcome == 'failure'
         uses: dsaltares/fetch-gh-release-asset@master
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.event.inputs.s3-version || 's3-v0.0.9' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ github.event.inputs.s3-version || 's3-v0.0.9' }}
           file: s3-terraform-config.zip  
 
       - name: Extract S3 Artifact
