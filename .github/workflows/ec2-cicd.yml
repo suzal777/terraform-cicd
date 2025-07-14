@@ -208,13 +208,10 @@ jobs:
           tag: ${{ needs.release.outputs.release_tag || 'ec2-v0.0.11' }}
           file: ec2-terraform-config.zip
 
-      - name: Move downloaded artifact
-        run: mv ec2-terraform-config.zip ec2-deploy/    
-
       - name: Extract Artifact
         run: |
           mkdir -p ec2-deploy/ec2-project
-          unzip ec2-deploy/ec2-terraform-config.zip -d ec2-deploy/ec2-project
+          unzip ec2-terraform-config.zip -d ec2-deploy/ec2-project
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
