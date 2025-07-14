@@ -179,7 +179,7 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release_ec2.outputs.upload_url }}
-          asset_path: release/ec2-terraform-config.zip
+          asset_path: ./ec2-terraform-config.zip
           asset_name: ec2-terraform-config.zip
           asset_content_type: application/zip  
         env:
