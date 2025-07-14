@@ -125,7 +125,7 @@ jobs:
           github-token: ${{ secrets.GH_PAT }}
           script: |
             const fs = require('fs');
-            const planOutput = fs.readFileSync('./terraform_plans/plan.txt', 'utf8');
+            const planOutput = fs.readFileSync('./ec2-project/terraform_plans/plan.txt', 'utf8');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
