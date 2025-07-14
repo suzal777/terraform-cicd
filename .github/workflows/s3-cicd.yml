@@ -170,7 +170,8 @@ jobs:
           release_name: "S3 Release ${{ steps.semver_s3.outputs.new_tag }}"
           draft: false
           prerelease: false    
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
